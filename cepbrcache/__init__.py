@@ -3,6 +3,7 @@ TODO:
  * Cache it with pylibmc, maybe is better let user choice what lib
  * Support user configuration for memcached host and mongodb host, if wanted
  * Write tests
+ ."
 """
 
 import re
@@ -42,7 +43,13 @@ def normalize_cep(cep):
 
 def get_cep(cep):
     """
-    Returns a CepCache instance from DB, or create with cepbr data
+    Returns a CepCache instance from DB, or create with cepbr
+
+    >>> cep = get_cep('01310200')
+    >>> cep.bairro
+    u'Bela Vista'
+    >>> cep.localidade
+    u'S\xe3o Paulo'
     """
     dbcep = CepCache(cep)
     if dbcep.found:
