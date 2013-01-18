@@ -25,7 +25,7 @@ setup(
         "Programming Language :: Python",
     ],
     install_requires=[
-        # "cepbr", uncomment when Mauro closes cepbr issue #3
+        "CEPBR",
         "pymongo"
     ],
 )
