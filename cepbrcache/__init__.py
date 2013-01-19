@@ -6,6 +6,7 @@ TODO:
  ."
 """
 
+import os
 import re
 from cepbr import CEP
 from pymongo import MongoClient
@@ -15,6 +16,16 @@ try:
 except:
     _str = str
 
+
+# settings
+CONNECTION_SETTINGS = {
+    'CEP_MONGO_HOST': os.environ.get('CEP_MONGO_HOST', 'localhost'),
+    'CEP_MONGO_PORT': os.environ.get('CEP_MONGO_PORT', 27017),
+    'CEP_DB_NAME': os.environ.get('CEP_DB_NAME', 'ceps'),
+    'CEP_MONGO_OPTS': os.environ.get('CEP_MONGO_OPTS', {}),
+}
+
+_conn = None  # so we dont use one connection for each object
 
 class CepNotFound(Exception):
     pass
@@ -59,11 +70,10 @@ def get_cep(cep):
 
 class CepCache(object):
 
+    __db = None
+
     def __init__(self, cep, **kw):
         self.found = False
-        self.db = MongoClient()
-        # create or get collection cepcaches
-        self._db = self.db.ceps
 
         if isinstance(cep, dict):
             if 'cep' not in cep:
@@ -77,13 +87,32 @@ class CepCache(object):
 
         self.get_cep()
 
+
+    @property
+    def db(self):
+        """
+        Keep db connection
+        """
+        if self.__db:
+            return self.__db
+
+        global _conn
+        if _conn is None:
+            _conn = MongoClient(host=CONNECTION_SETTINGS['CEP_MONGO_HOST'],
+                                 port=CONNECTION_SETTINGS['CEP_MONGO_PORT'],
+                                 **CONNECTION_SETTINGS['CEP_MONGO_OPTS'])
+
+        self.__db = getattr(_conn, CONNECTION_SETTINGS['CEP_DB_NAME'])
+
+        return self.__db
+
     def get_cep(self):
         n_cep = normalize_cep(self.cep)
-
+        import ipdb; ipdb.set_trace()
         if self.cep_attrs:
-            cep = self._db.cepcaches.find_and_modify({'cep': n_cep}, self.cep_attrs, True)
+            cep = self.db.cepcaches.find_and_modify({'cep': n_cep}, self.cep_attrs, True)
         else:
-            cep = self._db.cepcaches.find_one({'cep': n_cep})
+            cep = self.db.cepcaches.find_one({'cep': n_cep})
 
         if cep:
             self.__dict__.update(cep)
