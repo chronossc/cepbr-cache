@@ -108,7 +108,6 @@ class CepCache(object):
 
     def get_cep(self):
         n_cep = normalize_cep(self.cep)
-        import ipdb; ipdb.set_trace()
         if self.cep_attrs:
             cep = self.db.cepcaches.find_and_modify({'cep': n_cep}, self.cep_attrs, True)
         else:
