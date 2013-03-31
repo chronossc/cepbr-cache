@@ -13,21 +13,19 @@ Put 'cepbrcache' on you installed apps;
 
 ```python
 # settings.py
-INSTALLED_APPS += ['ceprcache']
-
+INSTALLED_APPS += ['cepbrcache']
 ```
 After you need to collect static files;
 
 ```python
 python manage.py collectstatic
-
 ```
 
 # 2. Urls
 
 ```python
 # urls.py
-    url(r'^cep/', include('cepbrcache.contrib.django.urls', namespace='cepbr')),
+url(r'^cep/', include('cepbrcache.contrib.django.urls', namespace='cepbr')),
 ```
 Note: We use the namespace 'cepbr', so don't change that.
 
