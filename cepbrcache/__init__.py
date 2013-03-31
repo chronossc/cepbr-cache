@@ -8,6 +8,7 @@ TODO:
 
 import os
 import re
+import json
 from cepbr import CEP
 from pymongo import MongoClient
 
@@ -26,6 +27,7 @@ CONNECTION_SETTINGS = {
 }
 
 _conn = None  # so we dont use one connection for each object
+
 
 class CepNotFound(Exception):
     pass
@@ -87,7 +89,6 @@ class CepCache(object):
 
         self.get_cep()
 
-
     @property
     def db(self):
         """
@@ -99,8 +100,8 @@ class CepCache(object):
         global _conn
         if _conn is None:
             _conn = MongoClient(host=CONNECTION_SETTINGS['CEP_MONGO_HOST'],
-                                 port=CONNECTION_SETTINGS['CEP_MONGO_PORT'],
-                                 **CONNECTION_SETTINGS['CEP_MONGO_OPTS'])
+                                port=CONNECTION_SETTINGS['CEP_MONGO_PORT'],
+                                **CONNECTION_SETTINGS['CEP_MONGO_OPTS'])
 
         self.__db = getattr(_conn, CONNECTION_SETTINGS['CEP_DB_NAME'])
 
@@ -109,7 +110,9 @@ class CepCache(object):
     def get_cep(self):
         n_cep = normalize_cep(self.cep)
         if self.cep_attrs:
-            cep = self.db.cepcaches.find_and_modify({'cep': n_cep}, self.cep_attrs, True)
+            cep = self.db.cepcaches.find_and_modify(
+                {'cep': n_cep},
+                self.cep_attrs, True)
         else:
             cep = self.db.cepcaches.find_one({'cep': n_cep})
 
@@ -118,6 +121,17 @@ class CepCache(object):
             self.found = True
 
         return cep
+
+    def json(self):
+        data = self.__dict__.copy()
+        invalids = filter(lambda key: key.startswith('_'), data)
+        for key in invalids:
+            data.pop(key)
+
+        if not self.found:
+            data = data['cep_attrs']
+
+        return json.dumps(data)
 
     def __repr__(self):
         return "<CepCache: %s>" % self.cep
